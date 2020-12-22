@@ -8,67 +8,72 @@ import (
 )
 
 func main() {
-	var host, port, password *string
+	var host, port, password, config *string
 	var err error
 	host = flag.String("h", "localhost", "host of mpd server")
+	config = flag.String("c", "", "path of config file")
 	port = flag.String("p", "6601", "port of mpd server")
 	password = flag.String("P", "", "password of mpd server")
 	flag.Parse()
-	command := flag.Arg(0)
-	m := ymc.Server{
+	m := ymc.Connection{
 		Host:     *host,
 		Port:     *port,
 		Password: *password,
 	}
-	conn := m.Connect()
-	defer conn.Close()
-	switch command {
+	if *config != "" {
+		m.ParseConfig(*config)
+	}
+	m.Connect()
+	defer m.Client.Close()
+	switch flag.Arg(0) {
+	case "":
+		break
 	case "play":
-		err = conn.Pause(false)
+		err = m.Client.Pause(false)
 		if err != nil {
 			log.Println(err)
 		}
 	case "pause":
-		err = conn.Pause(true)
+		err = m.Client.Pause(true)
 		if err != nil {
 			log.Println(err)
 		}
 	case "next":
-		err = conn.Next()
+		err = m.Client.Next()
 		if err != nil {
 			log.Println(err)
 		}
 	case "prev":
-		err = conn.Previous()
+		err = m.Client.Previous()
 		if err != nil {
 			log.Println(err)
 		}
 	case "toggle":
-		status := ymc.GetStatus(conn)
+		status := m.GetStatus()
 		if status["state"] == "play" {
-			err = conn.Pause(true)
+			err = m.Client.Pause(true)
 		} else {
-			err = conn.Pause(false)
+			err = m.Client.Pause(false)
 		}
 		if err != nil {
 			log.Println(err)
 		}
 	case "random":
-		status := ymc.GetStatus(conn)
+		status := m.GetStatus()
 		if status["random"] == "0" {
-			err = conn.Random(true)
+			err = m.Client.Random(true)
 		} else {
-			err = conn.Random(false)
+			err = m.Client.Random(false)
 		}
 		if err != nil {
 			log.Println(err)
 		}
 	case "repeat":
-		status := ymc.GetStatus(conn)
+		status := m.GetStatus()
 		if status["repeat"] == "0" {
-			err = conn.Repeat(true)
+			err = m.Client.Repeat(true)
 		} else {
-			err = conn.Repeat(false)
+			err = m.Client.Repeat(false)
 		}
 		if err != nil {
 			log.Println(err)
@@ -81,14 +86,13 @@ func main() {
 		if volume > 100 || volume < 0 {
 			log.Println("volume range is between [0-100]")
 		} else {
-			err = conn.SetVolume(volume)
+			err = m.Client.SetVolume(volume)
 			if err != nil {
 				log.Println(err)
 			}
 		}
-
 	default:
-		break
+		log.Println("arg isn't valid")
 	}
-	ymc.PrintStatus(conn)
+	m.PrintStatus()
 }

@@ -1,43 +1,76 @@
 package ymc
 
 import (
+	"bufio"
 	"fmt"
 	"github.com/fhs/gompd/mpd"
 	"log"
 	"math"
+	"os"
+	"regexp"
 	"strconv"
+	"strings"
 )
 
-type Server struct {
+type Connection struct {
 	Host     string
 	Port     string
 	Password string
+	Client   *mpd.Client
 }
 
-func (s *Server) Connect() (conn *mpd.Client) {
+func (c *Connection) ParseConfig(path string) {
+	home := os.Getenv("HOME")
+	file, err := os.Open(home + "/" + path)
+	if err != nil {
+		log.Println(err)
+	}
+	defer file.Close()
+	scanner := bufio.NewScanner(file)
+	scanner.Split(bufio.ScanLines)
+	parameters := []string{"host", "port", "password"}
+	for scanner.Scan() {
+		for _, parameter := range parameters {
+			value := scanner.Text()
+			match, _ := regexp.MatchString(parameter+"=", value)
+			if match == true {
+				value = strings.TrimPrefix(value, parameter+"=")
+				switch value {
+				case "host":
+					c.Host = value
+				case "port":
+					c.Port = value
+				case "password":
+					c.Password = value
+				}
+			}
+		}
+	}
+}
+func (c *Connection) Connect() {
 	var err error
-	address := s.Host + ":" + s.Port
-	if s.Password == "" {
-		conn, err = mpd.Dial("tcp", address)
+	address := c.Host + ":" + c.Port
+	if c.Password == "" {
+		c.Client, err = mpd.Dial("tcp", address)
 	} else {
-		conn, err = mpd.DialAuthenticated("tcp", address, s.Password)
+		c.Client, err = mpd.DialAuthenticated("tcp", address, c.Password)
 	}
 	if err != nil {
 		log.Fatalln("connection error", err)
 	}
-	log.Println("connected to", address)
+	fmt.Println("connected to", address)
 	return
 }
-func GetStatus(conn *mpd.Client) (status map[string]string) {
-	status, err := conn.Status()
+func (c *Connection) GetStatus() (status map[string]string) {
+	status, err := c.Client.Status()
 	if err != nil {
 		log.Fatalln(err)
 	}
 	return
 }
-func PrintStatus(conn *mpd.Client) {
-	status := GetStatus(conn)
-	song, err := conn.CurrentSong()
+func (c *Connection) PrintStatus() {
+	status := c.GetStatus()
+	song, err := c.Client.CurrentSong()
 	if err != nil {
 		log.Fatalln(err)
 	}
