@@ -3,7 +3,6 @@ package main
 import (
 	"flag"
 	"log"
-	"strconv"
 	"ymc/src/ymc"
 )
 
@@ -30,67 +29,26 @@ func main() {
 		break
 	case "play":
 		err = m.Client.Pause(false)
-		if err != nil {
-			log.Println(err)
-		}
+		ymc.CheckErr(err)
 	case "pause":
 		err = m.Client.Pause(true)
-		if err != nil {
-			log.Println(err)
-		}
+		ymc.CheckErr(err)
 	case "next":
 		err = m.Client.Next()
-		if err != nil {
-			log.Println(err)
-		}
+		ymc.CheckErr(err)
 	case "prev":
 		err = m.Client.Previous()
-		if err != nil {
-			log.Println(err)
-		}
+		ymc.CheckErr(err)
 	case "toggle":
-		status := m.GetStatus()
-		if status["state"] == "play" {
-			err = m.Client.Pause(true)
-		} else {
-			err = m.Client.Pause(false)
-		}
-		if err != nil {
-			log.Println(err)
-		}
+		m.Toggle()
 	case "random":
-		status := m.GetStatus()
-		if status["random"] == "0" {
-			err = m.Client.Random(true)
-		} else {
-			err = m.Client.Random(false)
-		}
-		if err != nil {
-			log.Println(err)
-		}
+		m.Random()
 	case "repeat":
-		status := m.GetStatus()
-		if status["repeat"] == "0" {
-			err = m.Client.Repeat(true)
-		} else {
-			err = m.Client.Repeat(false)
-		}
-		if err != nil {
-			log.Println(err)
-		}
+		m.Repeat()
 	case "volume":
-		volume, err := strconv.Atoi(flag.Arg(1))
-		if err != nil {
-			log.Println(err)
-		}
-		if volume > 100 || volume < 0 {
-			log.Println("volume range is between [0-100]")
-		} else {
-			err = m.Client.SetVolume(volume)
-			if err != nil {
-				log.Println(err)
-			}
-		}
+		m.ChangeVolume()
+	case "update":
+		m.UpdateDatabase()
 	default:
 		log.Println("arg isn't valid")
 	}
