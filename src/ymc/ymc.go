@@ -130,3 +130,47 @@ func (c *Connection) UpdateDatabase() {
 	CheckErr(err)
 	fmt.Println("updating Database #" + string(jobId))
 }
+func (c *Connection) Crossfade() {
+	second := flag.Arg(1)
+	err := c.Client.Command("crossfade " + second).OK()
+	CheckErr(err)
+}
+func (c *Connection) Stop() {
+	err := c.Client.Stop()
+	CheckErr(err)
+}
+func (c *Connection) Shuffle() {
+	err := c.Client.Shuffle(-1, -1)
+	CheckErr(err)
+}
+func (c *Connection) ListOutputs() {
+	outputs, err := c.Client.ListOutputs()
+	CheckErr(err)
+	for _, output := range outputs {
+		var status string
+		if output["outputenabled"] == "1" {
+			status = "is enabled"
+		} else {
+			status = "is disabled"
+		}
+		fmt.Println("output number :", output["outputid"], output["outputname"], status)
+	}
+}
+func (c *Connection) EnableOutput() {
+	output, err := strconv.Atoi(flag.Arg(1))
+	CheckErr(err)
+	err = c.Client.EnableOutput(output)
+	if err != nil {
+		fmt.Println(err)
+	}
+	c.ListOutputs()
+}
+func (c *Connection) DisableOutput() {
+	output, err := strconv.Atoi(flag.Arg(1))
+	CheckErr(err)
+	err = c.Client.DisableOutput(output)
+	if err != nil {
+		fmt.Println(err)
+	}
+	c.ListOutputs()
+}

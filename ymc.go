@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"log"
+	"os"
 	"ymc/src/ymc"
 )
 
@@ -49,6 +50,21 @@ func main() {
 		m.ChangeVolume()
 	case "update":
 		m.UpdateDatabase()
+	case "stop":
+		m.Stop()
+	case "shuffle":
+		m.Shuffle()
+	case "crossfade":
+		m.Crossfade()
+	case "outputs":
+		m.ListOutputs()
+		os.Exit(0)
+	case "disable":
+		m.DisableOutput()
+		os.Exit(0)
+	case "enable":
+		m.EnableOutput()
+		os.Exit(0)
 	default:
 		log.Println("arg isn't valid")
 	}
