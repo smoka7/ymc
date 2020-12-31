@@ -11,6 +11,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 )
 
 type Connection struct {
@@ -137,6 +138,26 @@ func (c *Connection) Crossfade() {
 }
 func (c *Connection) Stop() {
 	err := c.Client.Stop()
+	CheckErr(err)
+}
+func (c *Connection) Single() {
+	status := c.GetStatus()
+	if status["single"] == "0" {
+		err := c.Client.Single(true)
+		CheckErr(err)
+		return
+	}
+	err := c.Client.Single(false)
+	CheckErr(err)
+}
+func (c *Connection) Seek() {
+	percentage, _ := strconv.Atoi(flag.Arg(1))
+	info, _ := c.Client.CurrentSong()
+	songDuration, _ := strconv.Atoi(info["Time"])
+	d := songDuration * percentage / 100
+	seekDuration, err := time.ParseDuration(fmt.Sprintf("%ds", d))
+	CheckErr(err)
+	err = c.Client.SeekCur(seekDuration, false)
 	CheckErr(err)
 }
 func (c *Connection) Shuffle() {

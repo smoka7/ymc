@@ -54,6 +54,10 @@ func main() {
 		m.Stop()
 	case "shuffle":
 		m.Shuffle()
+	case "seek":
+		m.Seek()
+	case "single":
+		m.Single()
 	case "crossfade":
 		m.Crossfade()
 	case "outputs":
